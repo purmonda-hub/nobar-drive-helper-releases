@@ -1,0 +1,30 @@
+name: Update public Film Arsip index
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'catalog/update_index.py'
+      - '.github/workflows/catalog-index.yml'
+permissions:
+  contents: write
+concurrency:
+  group: film-arsip-public-index
+  cancel-in-progress: false
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read public website catalog pages
+        run: python3 catalog/update_index.py
+      - name: Save shared index
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- catalog/index.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update public film title index'
+          git push
